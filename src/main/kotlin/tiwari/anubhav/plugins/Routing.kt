@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import tiwari.anubhav.data.routes.loginRoute
+import tiwari.anubhav.data.routes.noteRoutes
 import tiwari.anubhav.data.routes.registerRoute
 
 fun Application.configureRouting() {
@@ -15,6 +16,7 @@ fun Application.configureRouting() {
 
         registerRoute()
         loginRoute()
+        noteRoutes()
 
     }
 }
