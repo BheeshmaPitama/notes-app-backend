@@ -4,6 +4,7 @@ import org.litote.kmongo.contains
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.eq
 import org.litote.kmongo.reactivestreams.KMongo
+import org.litote.kmongo.setValue
 import tiwari.anubhav.data.collections.Note
 import tiwari.anubhav.data.collections.User
 
@@ -34,3 +35,17 @@ suspend fun saveNote(note:Note):Boolean{
         notes.insertOne(note).wasAcknowledged()
     }
 }
+suspend fun deleteNoteForUser(email:String,noteID: String):Boolean{
+    val note = notes.findOne(Note::id eq noteID,Note::owners contains email)
+    note?.let { currentNote ->
+        if (currentNote.owners.size > 1) {
+            //Multiple Owners. Remove the current E-Mail from the List.
+            val newOwners = currentNote.owners - email
+            val updateResult = notes.updateOne(Note::id eq currentNote.id, setValue(Note::owners, newOwners))
+            return updateResult.wasAcknowledged()
+        }
+        return notes.deleteOneById(currentNote.id).wasAcknowledged()
+    } ?:return false
+}
+
+

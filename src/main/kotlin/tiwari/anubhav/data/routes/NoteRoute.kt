@@ -9,7 +9,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import tiwari.anubhav.data.collections.Note
+import tiwari.anubhav.data.deleteNoteForUser
 import tiwari.anubhav.data.getNotesForUser
+import tiwari.anubhav.data.requests.DeleteNoteRequest
 import tiwari.anubhav.data.saveNote
 
 fun Route.noteRoutes(){
@@ -39,6 +41,27 @@ fun Route.noteRoutes(){
                     call.respond(Conflict)
                 }
             }
+        }
+    }
+
+    route("/deleteNote"){
+        authenticate {
+            post {
+                val email = call.principal<UserIdPrincipal>()!!.name
+                val request = try {
+                    call.receive<DeleteNoteRequest>()
+                }catch (e:ContentTransformationException){
+                    call.respond(BadRequest)
+                    return@post
+                }
+
+                if(deleteNoteForUser(email,request.id)){
+                    call.respond(OK)
+                }else{
+                    call.respond(Conflict)
+                }
+            }
+
         }
     }
 }
