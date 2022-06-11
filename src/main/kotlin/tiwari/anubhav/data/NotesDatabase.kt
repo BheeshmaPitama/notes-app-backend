@@ -20,13 +20,16 @@ suspend fun registerUser(user: User):Boolean{
 suspend fun checkIfUserExists(email: String):Boolean{
     return users.findOne(User::email eq email) != null
 }
+
 suspend fun checkPasswordForEmail(email: String,passwordToCheck:String):Boolean{
     val actualPassword = users.findOne(User::email eq email)?.password ?:return false
     return actualPassword == passwordToCheck
 }
+
 suspend fun getNotesForUser(email: String):List<Note>{
     return notes.find(Note::owners contains email).toList()
 }
+
 suspend fun saveNote(note:Note):Boolean{
     val noteExists = notes.findOneById(note.id)!=null
     return if(noteExists){
@@ -35,6 +38,7 @@ suspend fun saveNote(note:Note):Boolean{
         notes.insertOne(note).wasAcknowledged()
     }
 }
+
 suspend fun deleteNoteForUser(email:String,noteID: String):Boolean{
     val note = notes.findOne(Note::id eq noteID,Note::owners contains email)
     note?.let { currentNote ->
@@ -48,4 +52,12 @@ suspend fun deleteNoteForUser(email:String,noteID: String):Boolean{
     } ?:return false
 }
 
+suspend fun addOwnerToNote(noteID: String,ownerEmail: String):Boolean{
+    val owners = notes.findOneById(noteID)?.owners?:return false
+    return notes.updateOneById(noteID, setValue(Note::owners,owners+ownerEmail)).wasAcknowledged()
+}
 
+suspend fun isOwnerOfNote(noteID:String,ownerEmail:String):Boolean{
+    val note = notes.findOneById(noteID)?:return false
+    return ownerEmail in note.owners
+}

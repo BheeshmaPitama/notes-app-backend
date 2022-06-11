@@ -8,11 +8,11 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import tiwari.anubhav.data.*
 import tiwari.anubhav.data.collections.Note
-import tiwari.anubhav.data.deleteNoteForUser
-import tiwari.anubhav.data.getNotesForUser
+import tiwari.anubhav.data.requests.AddOwnerRequest
 import tiwari.anubhav.data.requests.DeleteNoteRequest
-import tiwari.anubhav.data.saveNote
+import tiwari.anubhav.data.responses.SimpleResponse
 
 fun Route.noteRoutes(){
     route("/getNotes"){
@@ -62,6 +62,32 @@ fun Route.noteRoutes(){
                 }
             }
 
+        }
+    }
+
+    route("/addOwnerToNote"){
+        authenticate {
+            post {
+                val request = try {
+                    call.receive<AddOwnerRequest>()
+                }catch (e:ContentTransformationException){
+                    call.respond(BadRequest)
+                    return@post
+                }
+                if(!checkIfUserExists(request.owner)){
+                    call.respond(OK,SimpleResponse(false,"No User With This E-Mail Exists!"))
+                    return@post
+                }
+                if(isOwnerOfNote(request.noteID,request.owner)){
+                    call.respond(OK,SimpleResponse(false,"This user is already an owner of this note!"))
+                    return@post
+                }
+                if(addOwnerToNote(request.noteID,request.owner)){
+                    call.respond(OK,SimpleResponse(true,"${request.owner} can now see this note!"))
+                }else{
+                    call.respond(Conflict)
+                }
+            }
         }
     }
 }
